@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Facebook, Instagram } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 
 // Types
@@ -932,12 +932,14 @@ const BatterDaysPreOrder = () => {
       {/* Footer */}
       <footer className="text-center py-8 text-gray-500 text-sm border-t border-dashed border-red-200 bg-white/50">
         <p className="font-heading font-bold text-red-800 text-lg mb-2">Batter Days by Charlie</p>
-        <div className="flex justify-center gap-4 mb-4">
-          <a href="#" className="flex items-center gap-1 hover:text-red-600 transition-colors">
-            <span>📷</span> @batterdays_bycharlie
+        <div className="flex justify-center gap-6 mb-4">
+          <a href="https://www.instagram.com/batterdays_bycharlie/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-red-600 transition-colors">
+            <Instagram size={20} />
+            <span className="font-bold">@batterdays_bycharlie</span>
           </a>
-          <a href="#" className="flex items-center gap-1 hover:text-red-600 transition-colors">
-            <span>📘</span> Batter Days by Charlie
+          <a href="https://www.facebook.com/profile.php?id=61586528588558" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-red-600 transition-colors">
+            <Facebook size={20} />
+            <span className="font-bold">Batter Days by Charlie</span>
           </a>
         </div>
         <p>&copy; 2026 Batter Days. All rights reserved.</p>

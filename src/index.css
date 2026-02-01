@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Outfit', sans-serif;
+
+  --color-primary: #c41e3a;
+  /* Deep Red */
+  --color-primary-light: #d6455d;
+  --color-secondary: #FFFDF5;
+  /* Cream */
+  --color-accent: #F4E4E4;
+  /* Pinkish-Beige */
+  --color-text-main: #4a2c2a;
+  /* Warm Brown */
+  --color-text-sub: #8b5e5e;
+}
+
+/* Custom Utilities if needed */
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+}
+
+/* Base Styles */
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-main);
+  background-color: var(--color-secondary);
+}

@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
@@ -369,25 +371,7 @@ const BatterDaysPreOrder = () => {
   };
 
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const dateVal = e.target.value;
-    const minDate = getMinPickupDate();
 
-    // 1. Check if date is too early (Lead Time Rule)
-    if (dateVal < minDate) {
-      alert(`⚠️ Too early! We need 1 week lead time.\n\nEarliest pickup starts: ${minDate}`);
-      setFormData({ ...formData, pickupDate: '' });
-      return;
-    }
-
-    // 2. Check if date is a weekend (Fri-Sun)
-    if (isDateDisabled(dateVal)) {
-      alert("⚠️ We are busy baking on weekends!\n\nPickups are only available Monday to Thursday.");
-      setFormData({ ...formData, pickupDate: '' });
-    } else {
-      setFormData({ ...formData, pickupDate: dateVal });
-    }
-  };
   // --- CALENDAR LOGIC END ---
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -782,15 +766,28 @@ const BatterDaysPreOrder = () => {
                     <h3 className="font-bold text-gray-400 uppercase text-xs tracking-wider mb-2">Pickup Schedule</h3>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">Pickup Date (Mon-Thu Only)</label>
-                      <input
-                        type="date"
-                        required
-                        min={getMinPickupDate()}
-                        value={formData.pickupDate}
-                        onChange={handleDateChange}
-                        onKeyDown={(e) => e.preventDefault()}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white text-base"
-                      />
+                      <div className="custom-datepicker-wrapper">
+                        <DatePicker
+                          selected={formData.pickupDate ? new Date(formData.pickupDate) : null}
+                          onChange={(date: Date | null) => {
+                            if (date) {
+                              // Adjust for timezone offset to prevent one-day-off errors when converting to string
+                              const offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+                              setFormData({ ...formData, pickupDate: offsetDate.toISOString().split('T')[0] });
+                            }
+                          }}
+                          minDate={new Date(getMinPickupDate())}
+                          filterDate={(date) => {
+                            const day = date.getDay();
+                            return day !== 0 && day !== 5 && day !== 6; // Disable Sun(0), Fri(5), Sat(6)
+                          }}
+                          placeholderText="Select a Pickup Date"
+                          dateFormat="MMMM d, yyyy"
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white text-base cursor-pointer"
+                          wrapperClassName="w-full"
+                          onKeyDown={(e) => e.preventDefault()} // Prevent typing
+                        />
+                      </div>
                       <p className="text-xs text-red-500 mt-1 font-medium bg-red-50 inline-block px-2 py-1 rounded-md">
                         📅 Pickups available starting: {new Date(getMinPickupDate()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </p>

@@ -386,9 +386,8 @@ const BatterDaysPreOrder = () => {
     e.preventDefault();
 
     // Final Validation before submit
-    // Final Validation before submit
     if (isDateDisabled(formData.pickupDate)) {
-      setDateError("Please select a valid weekday (Mon-Thu). Weekends are for baking!");
+      alert("Please select a valid weekday (Mon-Thu). Weekends are for baking!");
       return;
     }
 

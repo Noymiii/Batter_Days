@@ -330,8 +330,8 @@ const BatterDaysPreOrder = () => {
 
   // 🧪 TEST MODE: SIMULATE DATE
   // Uncomment the date you want to test.
-  // const SIMULATED_TODAY = new Date(); // Real Today (Use this for production)
-  const SIMULATED_TODAY = new Date(2026, 1, 2, 10, 0, 0); // TEST: Monday Feb 2 (Month is 0-indexed: 0=Jan, 1=Feb)
+  const SIMULATED_TODAY = new Date(); // Real Today (Use this for production)
+  // const SIMULATED_TODAY = new Date(2026, 1, 2, 10, 0, 0); // TEST: Monday Feb 2 (Month is 0-indexed: 0=Jan, 1=Feb)
   // const SIMULATED_TODAY = new Date(2026, 1, 6, 10, 0, 0); // TEST: Friday Feb 6 (Shop CLOSED)
 
   // Shop is OPEN only Mon(1) - Thu(4)
@@ -457,10 +457,7 @@ const BatterDaysPreOrder = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* DEBUG BAR */}
-        <div className="bg-black text-white text-xs py-1 px-2 rounded mb-4 inline-block font-mono">
-          DEBUG: Simulating {SIMULATED_TODAY.toDateString()} | Shop Open? {isShopOpen() ? "YES" : "NO"}
-        </div>
+
 
         <div className="max-w-xs mx-auto mb-6">
           <img

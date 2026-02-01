@@ -714,11 +714,11 @@ const BatterDaysPreOrder = () => {
 
                       {/* Selected QR Display */}
                       <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl border border-gray-100 min-h-[350px]">
-                        <div className="relative w-[280px] h-[280px] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mx-auto">
+                        <div className="relative w-full max-w-[280px] aspect-square bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mx-auto">
                           {/* Crop bottom text by anchoring to TOP and setting fixed height/cover */}
-                          {selectedPayment === 'GCash' && <img src="/assets/qr_gcash.png" alt="GCash QR" className="w-full h-[320px] object-cover object-top -mt-2" />}
-                          {selectedPayment === 'Maya' && <img src="/assets/qr_maya.png" alt="Maya QR" className="w-full h-[320px] object-cover object-top -mt-2" />}
-                          {selectedPayment === 'MariBank' && <img src="/assets/qr_maribank.png" alt="MariBank QR" className="w-full h-[320px] object-cover object-top -mt-2" />}
+                          {selectedPayment === 'GCash' && <img src="/assets/qr_gcash.png" alt="GCash QR" className="w-full h-full object-cover object-top" />}
+                          {selectedPayment === 'Maya' && <img src="/assets/qr_maya.png" alt="Maya QR" className="w-full h-full object-cover object-top" />}
+                          {selectedPayment === 'MariBank' && <img src="/assets/qr_maribank.png" alt="MariBank QR" className="w-full h-full object-cover object-top" />}
                         </div>
                         <p className="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
                           Scan with {selectedPayment}

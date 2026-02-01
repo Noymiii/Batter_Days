@@ -372,12 +372,21 @@ const BatterDaysPreOrder = () => {
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateVal = e.target.value;
-    setFormData({ ...formData, pickupDate: dateVal }); // Allow change, but validate
+    const minDate = getMinPickupDate();
 
+    // 1. Check if date is too early (Lead Time Rule)
+    if (dateVal < minDate) {
+      alert(`⚠️ Too early! We need 1 week lead time.\n\nEarliest pickup starts: ${minDate}`);
+      setFormData({ ...formData, pickupDate: '' });
+      return;
+    }
+
+    // 2. Check if date is a weekend (Fri-Sun)
     if (isDateDisabled(dateVal)) {
-      setDateError("⚠️ Weekends are for baking! Please choose Mon-Thu.");
+      alert("⚠️ We are busy baking on weekends!\n\nPickups are only available Monday to Thursday.");
+      setFormData({ ...formData, pickupDate: '' });
     } else {
-      setDateError("");
+      setFormData({ ...formData, pickupDate: dateVal });
     }
   };
   // --- CALENDAR LOGIC END ---
@@ -386,6 +395,11 @@ const BatterDaysPreOrder = () => {
     e.preventDefault();
 
     // Final Validation before submit
+    const minDate = getMinPickupDate();
+    if (formData.pickupDate < minDate) {
+      alert(`Please select a date on or after ${minDate}.`);
+      return;
+    }
     if (isDateDisabled(formData.pickupDate)) {
       alert("Please select a valid weekday (Mon-Thu). Weekends are for baking!");
       return;

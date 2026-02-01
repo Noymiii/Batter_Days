@@ -368,7 +368,6 @@ const BatterDaysPreOrder = () => {
     return minDate.toISOString().split('T')[0];
   };
 
-  const [dateError, setDateError] = useState('');
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateVal = e.target.value;

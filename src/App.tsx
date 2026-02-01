@@ -789,17 +789,11 @@ const BatterDaysPreOrder = () => {
                         value={formData.pickupDate}
                         onChange={handleDateChange}
                         onKeyDown={(e) => e.preventDefault()}
-                        className={`w-full px-4 py-3 rounded-xl border ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-200'} focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all focus:bg-white text-base`}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white text-base"
                       />
-                      {dateError ? (
-                        <p className="text-xs text-red-600 mt-2 font-bold animate-pulse">
-                          {dateError}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-gray-500 mt-2 font-medium bg-gray-100 inline-block px-2 py-1 rounded-md">
-                          📅 Pickups start: {new Date(getMinPickupDate()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </p>
-                      )}
+                      <p className="text-xs text-red-500 mt-1 font-medium bg-red-50 inline-block px-2 py-1 rounded-md">
+                        📅 Pickups available starting: {new Date(getMinPickupDate()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </p>
                     </div>
                   </div>
 

@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Facebook, Instagram } from 'lucide-react';
+import { Plus, Minus, X, Facebook, Instagram } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 
 // Types
@@ -28,8 +26,6 @@ interface OrderFormData {
   name: string;
   phone: string;
   email: string;
-  pickupDate: string;
-  pickupTime: string;
   specialInstructions: string;
 }
 
@@ -76,14 +72,15 @@ const ProductCard = React.memo(({
   isShopOpen = true // Default to true if not passed
 }: {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, quantity: number) => void;
   cartItems: CartItem[];
   isShopOpen?: boolean;
 }) => {
-  // Optimized find: only re-calculates when cart changes
-  const qty = React.useMemo(() => {
-    const item = cartItems.find(i => i.productId === product.id);
-    return item ? item.quantity : 0;
+  const [selectedQty, setSelectedQty] = useState(1);
+
+  // Check if already in cart
+  const inCart = React.useMemo(() => {
+    return cartItems.some(i => i.productId === product.id);
   }, [cartItems, product.id]);
 
   return (
@@ -123,19 +120,38 @@ const ProductCard = React.memo(({
             <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
           </div>
 
+          {/* Quantity Selector */}
+          {isShopOpen && !inCart && (
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <button
+                onClick={() => setSelectedQty(q => Math.max(1, q - 1))}
+                className="w-8 h-8 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <span className="text-lg font-bold text-gray-800 w-8 text-center">{selectedQty}</span>
+              <button
+                onClick={() => setSelectedQty(q => q + 1)}
+                className="w-8 h-8 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <button
-            onClick={() => isShopOpen && qty === 0 && onAddToCart(product)}
-            disabled={!isShopOpen || qty > 0}
-            className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && qty === 0
+            onClick={() => { if (isShopOpen && !inCart) { onAddToCart(product, selectedQty); setSelectedQty(1); } }}
+            disabled={!isShopOpen || inCart}
+            className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && !inCart
               ? 'bg-red-600 text-white hover:bg-red-700'
-              : qty > 0
+              : inCart
                 ? 'bg-green-500 text-white cursor-default hover:bg-green-500'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
               }`}
           >
             {!isShopOpen ? (
               'Pre-Orders Open Mon\u2013Thu'
-            ) : qty > 0 ? (
+            ) : inCart ? (
               'Added \u2713'
             ) : (
               <>
@@ -159,18 +175,15 @@ const BatterDaysPreOrder = () => {
     name: '',
     phone: '',
     email: '',
-    pickupDate: '',
-    pickupTime: '',
     specialInstructions: ''
   });
   const orderFormRef = useRef<HTMLDivElement>(null);
   // Memoize handlers to prevent prop drilling re-renders
-  // Single order only: max 1 per flavor
-  const addToCart = React.useCallback((product: Product) => {
+  const addToCart = React.useCallback((product: Product, quantity: number) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev; // Single order — do not increment
+        return prev; // Already in cart
       }
       return [...prev, {
         id: product.id,
@@ -178,10 +191,14 @@ const BatterDaysPreOrder = () => {
         name: product.name,
         price: product.price,
         image: product.image,
-        quantity: 1
+        quantity: quantity
       }];
     });
   }, []);
+
+  const incrementItem = (uniqueId: string) => {
+    setCart(prev => prev.map(item => item.id === uniqueId ? { ...item, quantity: item.quantity + 1 } : item));
+  };
 
   const removeFromCart = (uniqueId: string) => {
     setCart(prev => {
@@ -223,67 +240,14 @@ const BatterDaysPreOrder = () => {
   // 🔴 IMPORTANT: REPLACE THIS WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx42jIGvtYZ5u2_ALUYu8bmvXMSDtyHcZJep4dDv2nJnvwZXOF5RaGdt-QYqlgJgz8Esw/exec"
 
-  // --- CALENDAR LOGIC START ---
-
-  // 🧪 TEST MODE: SIMULATE DATE
-  // Uncomment the date you want to test.
-  const SIMULATED_TODAY = new Date(); // Real Today (Use this for production)
-  // const SIMULATED_TODAY = new Date(2026, 1, 2, 10, 0, 0); // TEST: Monday Feb 2 (Month is 0-indexed: 0=Jan, 1=Feb)
-  // const SIMULATED_TODAY = new Date(2026, 1, 6, 10, 0, 0); // TEST: Friday Feb 6 (Shop CLOSED)
-
   // Shop is OPEN only Mon(1) - Thu(4)
   const isShopOpen = () => {
-    const day = SIMULATED_TODAY.getDay();
+    const day = new Date().getDay();
     return day >= 1 && day <= 4;
   };
 
-  // Returns TRUE if the date is Fri(5), Sat(6), or Sun(0) (BAKING DAYS - NO PICKUPS)
-  const isDateDisabled = (dateString: string) => {
-    if (!dateString) return false;
-    const date = new Date(dateString);
-    const day = date.getDay();
-    // Pickup allowed only Mon(1), Tue(2), Wed(3), Thu(4)
-    return day === 0 || day === 5 || day === 6;
-  };
-
-  // Calculates the minimum valid pickup date based on the "Next Week" rule
-  const getMinPickupDate = () => {
-    const today = new Date(SIMULATED_TODAY); // Use Simulated Date
-    const dayOfWeek = today.getDay();
-
-    // Logic: Order Mon-Thu (Week A) -> Pickup Mon-Thu (Week B)
-    // We need to calculate days until the *Next Monday*.
-
-    // Days until next Monday:
-    // If Mon(1) -> +7 days (Next Mon)
-    // If Thu(4) -> +4 days (Next Mon)
-
-    let daysUntilNextMonday = (1 - dayOfWeek + 7) % 7;
-    if (daysUntilNextMonday === 0) daysUntilNextMonday = 7;
-
-    const minDate = new Date(today);
-    minDate.setDate(today.getDate() + daysUntilNextMonday);
-
-    return minDate.toISOString().split('T')[0];
-  };
-
-
-
-  // --- CALENDAR LOGIC END ---
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Final Validation before submit
-    const minDate = getMinPickupDate();
-    if (formData.pickupDate < minDate) {
-      alert(`Please select a date on or after ${minDate}.`);
-      return;
-    }
-    if (isDateDisabled(formData.pickupDate)) {
-      alert("Please select a valid weekday (Mon-Thu). Weekends are for baking!");
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -295,8 +259,6 @@ const BatterDaysPreOrder = () => {
         name: formData.name, // Matched to backend 'data.name'
         contact: formData.phone,
         email: formData.email,
-        pickupDate: formData.pickupDate,
-        pickupTime: formData.pickupTime,
         order: cart.map(item => `${item.quantity}x ${item.name}`).join(', '), // Matched to backend 'data.order'
         cart: cart, // 🔴 NEW: Sending full cart data for LineItems sheet
         total: cartTotal, // Matched to backend 'data.total'
@@ -321,8 +283,6 @@ const BatterDaysPreOrder = () => {
         name: '',
         phone: '',
         email: '',
-        pickupDate: '',
-        pickupTime: '',
         specialInstructions: ''
       });
       setPaymentProof(null);
@@ -638,39 +598,6 @@ const BatterDaysPreOrder = () => {
                     </div>
                   </div>
 
-                  {/* Pickup Section */}
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-gray-400 uppercase text-xs tracking-wider mb-2">Pickup Schedule</h3>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Pickup Date (Mon-Thu Only)</label>
-                      <div className="custom-datepicker-wrapper">
-                        <DatePicker
-                          selected={formData.pickupDate ? new Date(formData.pickupDate) : null}
-                          onChange={(date: Date | null) => {
-                            if (date) {
-                              // Adjust for timezone offset to prevent one-day-off errors when converting to string
-                              const offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-                              setFormData({ ...formData, pickupDate: offsetDate.toISOString().split('T')[0] });
-                            }
-                          }}
-                          minDate={new Date(getMinPickupDate())}
-                          filterDate={(date) => {
-                            const day = date.getDay();
-                            return day !== 0 && day !== 5 && day !== 6; // Disable Sun(0), Fri(5), Sat(6)
-                          }}
-                          placeholderText="Select a Pickup Date"
-                          dateFormat="MMMM d, yyyy"
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white text-base cursor-pointer"
-                          wrapperClassName="w-full"
-                          onKeyDown={(e) => e.preventDefault()} // Prevent typing
-                        />
-                      </div>
-                      <p className="text-xs text-red-500 mt-1 font-medium bg-red-50 inline-block px-2 py-1 rounded-md">
-                        📅 Pickups available starting: {new Date(getMinPickupDate()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-
                   {/* Payment Upload Section */}
                   <div className="space-y-4">
                     <h3 className="font-bold text-gray-400 uppercase text-xs tracking-wider mb-2">Payment Verification</h3>
@@ -776,10 +703,18 @@ const BatterDaysPreOrder = () => {
                           </div>
                           <div>
                             <h4 className="font-bold text-sm text-gray-800">{item.name}</h4>
-                            <p className="text-xs text-gray-500">₱{item.price}</p>
+                            <p className="text-xs text-gray-500">₱{item.price} each</p>
                           </div>
                         </div>
-                        <button onClick={() => removeFromCart(item.id)} className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-red-50">Remove</button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => removeFromCart(item.id)} className="w-7 h-7 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-sm font-bold text-gray-800 w-6 text-center">{item.quantity}</span>
+                          <button onClick={() => incrementItem(item.id)} className="w-7 h-7 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}

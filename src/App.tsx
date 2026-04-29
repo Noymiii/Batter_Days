@@ -36,7 +36,7 @@ const products: Product[] = [
     id: 'c1',
     name: 'Chocolate Chip Cookies',
     price: 45,
-    image: '/assets/cookie.png',
+    image: '/assets/chocolatechip.png',
     category: 'Cookies',
     badge: 'Best Seller'
   },
@@ -44,14 +44,14 @@ const products: Product[] = [
     id: 'c2',
     name: 'Oatmeal Cookies',
     price: 45,
-    image: '/assets/cookie.png',
+    image: '/assets/oatmeal.png',
     category: 'Cookies'
   },
   {
     id: 'c3',
     name: 'Red Velvet Cookies',
     price: 45,
-    image: '/assets/cookie.png',
+    image: '/assets/revelvet.png',
     category: 'Cookies',
     badge: 'Must Try'
   }
@@ -76,6 +76,7 @@ const ProductCard = React.memo(({
   cartItems: CartItem[];
   isShopOpen?: boolean;
 }) => {
+  const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedQty, setSelectedQty] = useState(1);
 
   // Check if already in cart
@@ -83,86 +84,141 @@ const ProductCard = React.memo(({
     return cartItems.some(i => i.productId === product.id);
   }, [cartItems, product.id]);
 
+  const handleConfirmOrder = () => {
+    onAddToCart(product, selectedQty);
+    setShowQtyModal(false);
+    setSelectedQty(1);
+  };
+
   return (
-    <motion.div
-      className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-pink-100 flex flex-col h-full transform-gpu"
-      whileHover={{ y: -5 }}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="relative h-48 overflow-hidden bg-rose-50 flex-shrink-0">
-        <img
-          src={product.image}
-          alt={product.name}
-          loading="lazy"
-          className={`w-full h-full object-cover transition-transform duration-500 hover:scale-105 ${!isShopOpen ? 'grayscale opacity-70' : ''}`}
-        />
-        {product.badge && (
-          <div className="absolute top-3 right-3">
-            <Badge className={`${product.badge === 'Best Seller'
-              ? 'bg-amber-400 text-amber-900 border-amber-500'
-              : 'bg-rose-400 text-rose-900 border-rose-500'
-              } shadow-md font-bold`}>
-              {product.badge}
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      <div className="p-5 flex flex-col flex-1">
-        <h3 className="text-xl font-bold text-gray-800 mb-1 font-heading leading-tight min-h-[3rem]">{product.name}</h3>
-
-        <div className="mt-auto">
-          <div className="flex justify-between items-end mb-3">
-            <span className="text-sm text-gray-500 font-medium">Per piece</span>
-            <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
-          </div>
-
-          {/* Quantity Selector */}
-          {isShopOpen && !inCart && (
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <button
-                onClick={() => setSelectedQty(q => Math.max(1, q - 1))}
-                className="w-8 h-8 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="text-lg font-bold text-gray-800 w-8 text-center">{selectedQty}</span>
-              <button
-                onClick={() => setSelectedQty(q => q + 1)}
-                className="w-8 h-8 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+    <>
+      <motion.div
+        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-pink-100 flex flex-col h-full transform-gpu"
+        whileHover={{ y: -5 }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="relative h-48 overflow-hidden bg-rose-50 flex-shrink-0">
+          <img
+            src={product.image}
+            alt={product.name}
+            loading="lazy"
+            className={`w-full h-full object-cover transition-transform duration-500 hover:scale-105 ${!isShopOpen ? 'grayscale opacity-70' : ''}`}
+          />
+          {product.badge && (
+            <div className="absolute top-3 right-3">
+              <Badge className={`${product.badge === 'Best Seller'
+                ? 'bg-amber-400 text-amber-900 border-amber-500'
+                : 'bg-rose-400 text-rose-900 border-rose-500'
+                } shadow-md font-bold`}>
+                {product.badge}
+              </Badge>
             </div>
           )}
-
-          <button
-            onClick={() => { if (isShopOpen && !inCart) { onAddToCart(product, selectedQty); setSelectedQty(1); } }}
-            disabled={!isShopOpen || inCart}
-            className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && !inCart
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : inCart
-                ? 'bg-green-500 text-white cursor-default hover:bg-green-500'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
-              }`}
-          >
-            {!isShopOpen ? (
-              'Pre-Orders Open Mon\u2013Thu'
-            ) : inCart ? (
-              'Added \u2713'
-            ) : (
-              <>
-                <Plus className="w-4 h-4" />
-                Pre-Order Now
-              </>
-            )}
-          </button>
         </div>
-      </div>
-    </motion.div>
+
+        <div className="p-5 flex flex-col flex-1">
+          <h3 className="text-xl font-bold text-gray-800 mb-1 font-heading leading-tight min-h-[3rem]">{product.name}</h3>
+
+          <div className="mt-auto">
+            <div className="flex justify-between items-end mb-3">
+              <span className="text-sm text-gray-500 font-medium">Per piece</span>
+              <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
+            </div>
+
+            <button
+              onClick={() => { if (isShopOpen && !inCart) setShowQtyModal(true); }}
+              disabled={!isShopOpen || inCart}
+              className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && !inCart
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : inCart
+                  ? 'bg-green-500 text-white cursor-default hover:bg-green-500'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
+                }`}
+            >
+              {!isShopOpen ? (
+                'Orders Open Mon\u2013Thu'
+              ) : inCart ? (
+                'Added \u2713'
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Order Now
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Quantity Selection Modal */}
+      <AnimatePresence>
+        {showQtyModal && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowQtyModal(false); setSelectedQty(1); }}
+            />
+            <motion.div
+              className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full pointer-events-auto text-center border border-rose-100">
+                <div className="w-24 h-24 rounded-2xl overflow-hidden mx-auto mb-4 shadow-md bg-rose-50">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 font-heading mb-1">{product.name}</h3>
+                <p className="text-red-600 font-bold text-lg mb-6">₱{product.price} each</p>
+
+                <p className="text-sm text-gray-500 font-medium mb-3">How many would you like?</p>
+                <div className="flex items-center justify-center gap-4 mb-6">
+                  <button
+                    onClick={() => setSelectedQty(q => Math.max(1, q - 1))}
+                    className="w-10 h-10 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95 shadow-sm"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <span className="text-3xl font-bold text-gray-800 w-12 text-center">{selectedQty}</span>
+                  <button
+                    onClick={() => setSelectedQty(q => q + 1)}
+                    className="w-10 h-10 rounded-full bg-rose-100 text-red-600 flex items-center justify-center hover:bg-rose-200 transition-colors active:scale-95 shadow-sm"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="bg-rose-50 rounded-xl p-3 mb-6">
+                  <p className="text-sm text-gray-600">Subtotal: <span className="font-bold text-red-600 text-lg">₱{product.price * selectedQty}</span></p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowQtyModal(false); setSelectedQty(1); }}
+                    className="flex-1 py-3 rounded-full font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmOrder}
+                    className="flex-1 py-3 rounded-full font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors shadow-md active:scale-95"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 });
 
@@ -328,9 +384,9 @@ const BatterDaysPreOrder = () => {
         {!isShopOpen() && (
           <div className="bg-red-600 text-white py-3 px-4 rounded-xl shadow-lg max-w-2xl mx-auto mb-6 animate-pulse">
             <p className="font-bold flex items-center justify-center gap-2">
-              🛑 Pre-orders are currently closed!
+              🛑 Orders are currently closed!
             </p>
-            <p className="text-sm opacity-90 mt-1">Pre-orders reopen Monday. Every order supports the women of Baganihan.</p>
+            <p className="text-sm opacity-90 mt-1">Orders reopen Monday. Every order supports the women of Baganihan.</p>
           </div>
         )}
 
@@ -434,12 +490,12 @@ const BatterDaysPreOrder = () => {
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
                   <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">How can I place an order?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">Pre-order right here on our website! Select your flavor and complete the order form.</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">Order right here on our website! Select your flavor and complete the order form.</p>
                 </div>
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
-                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I pre-order?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">Pre-orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I order?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">Orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
                 </div>
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
@@ -730,7 +786,7 @@ const BatterDaysPreOrder = () => {
                     disabled={cart.length === 0 || !isShopOpen()}
                     className="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {isShopOpen() ? 'Proceed to Pre-Order' : 'Pre-Orders Closed (Fri–Sun)'}
+                    {isShopOpen() ? 'Proceed to Order' : 'Orders Closed (Fri–Sun)'}
                   </button>
                 </div>
               </div>

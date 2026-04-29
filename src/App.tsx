@@ -39,7 +39,7 @@ interface OrderFormData {
 
 // Products Data (From Menu Image)
 const products: Product[] = [
-  // COOKIES
+  // BAKING A DIFFERENCE — 3 Charity Flavors
   {
     id: 'c1',
     name: 'Chocolate Chip Cookies',
@@ -62,84 +62,6 @@ const products: Product[] = [
     image: '/assets/cookie.png',
     category: 'Cookies',
     badge: 'Must Try'
-  },
-  {
-    id: 'c4',
-    name: 'Nutella Cookies',
-    prices: { box6: 260, box12: 480 },
-    image: '/assets/cookie.png',
-    category: 'Cookies'
-  },
-  {
-    id: 'c5',
-    name: 'Biscoff Cookies',
-    prices: { box6: 260, box12: 480 },
-    image: '/assets/cookie.png',
-    category: 'Cookies'
-  },
-
-  // BROWNIES
-  {
-    id: 'b1',
-    name: 'Fudge Brownies',
-    prices: { box6: 220, box12: 380 },
-    image: '/assets/brownie.png',
-    category: 'Brownies',
-    badge: 'Best Seller'
-  },
-  {
-    id: 'b2',
-    name: 'Nutty Brownies',
-    prices: { box6: 260, box12: 450 },
-    image: '/assets/brownie.png',
-    category: 'Brownies'
-  },
-
-  // MUFFINS
-  {
-    id: 'm1',
-    name: 'Banana Muffin',
-    prices: { box6: 250, box12: 400 },
-    image: '/assets/muffin.png',
-    category: 'Muffins'
-  },
-  {
-    id: 'm2',
-    name: 'Chocolate Chip Muffin',
-    prices: { box6: 250, box12: 400 },
-    image: '/assets/muffin.png',
-    category: 'Muffins'
-  },
-  {
-    id: 'm3',
-    name: 'Corn Muffin',
-    prices: { box6: 250, box12: 400 },
-    image: '/assets/muffin.png',
-    category: 'Muffins'
-  },
-
-  // CUPCAKES
-  {
-    id: 'cp1',
-    name: 'Vanilla w/ Buttercream',
-    prices: { box6: 250, box12: 600 },
-    image: '/assets/cupcake.png', // Note: Image says 350 for box 6 but 250 was generic, updating to match image explicitly
-    category: 'Cupcakes'
-  },
-  {
-    id: 'cp2',
-    name: 'Chocolate w/ Buttercream',
-    prices: { box6: 350, box12: 600 },
-    image: '/assets/cupcake.png',
-    category: 'Cupcakes'
-  },
-  {
-    id: 'cp3',
-    name: 'Red Velvet w/ Cream Cheese',
-    prices: { box6: 380, box12: 650 },
-    image: '/assets/cupcake.png',
-    category: 'Cupcakes',
-    badge: 'Best Seller'
   }
 ];
 
@@ -225,20 +147,24 @@ const ProductCard = React.memo(({
           </div>
 
           <button
-            onClick={() => isShopOpen && onAddToCart(product, selectedSize, currentPrice)}
-            disabled={!isShopOpen}
-            className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen
+            onClick={() => isShopOpen && qty === 0 && onAddToCart(product, selectedSize, currentPrice)}
+            disabled={!isShopOpen || qty > 0}
+            className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && qty === 0
               ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
+              : qty > 0
+                ? 'bg-green-500 text-white cursor-default hover:bg-green-500'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
               }`}
           >
-            {isShopOpen ? (
+            {!isShopOpen ? (
+              'Pre-Orders Open Mon\u2013Thu'
+            ) : qty > 0 ? (
+              'Added \u2713'
+            ) : (
               <>
                 <Plus className="w-4 h-4" />
-                {qty > 0 ? `Add Another (${qty})` : 'Add to Order'}
+                Pre-Order Now
               </>
-            ) : (
-              'Opens Monday'
             )}
           </button>
         </div>
@@ -262,12 +188,13 @@ const BatterDaysPreOrder = () => {
   });
   const orderFormRef = useRef<HTMLDivElement>(null);
   // Memoize handlers to prevent prop drilling re-renders
+  // Single order only: max 1 per item variant
   const addToCart = React.useCallback((product: Product, size: 'Box of 6' | 'Box of 12', price: number) => {
     const uniqueId = `${product.id}-${size}`;
     setCart(prev => {
       const existing = prev.find(item => item.id === uniqueId);
       if (existing) {
-        return prev.map(item => item.id === uniqueId ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev; // Single order — do not increment
       }
       return [...prev, {
         id: uniqueId,
@@ -471,9 +398,9 @@ const BatterDaysPreOrder = () => {
         {!isShopOpen() && (
           <div className="bg-red-600 text-white py-3 px-4 rounded-xl shadow-lg max-w-2xl mx-auto mb-6 animate-pulse">
             <p className="font-bold flex items-center justify-center gap-2">
-              🛑 Pre-orders are CLOSED for the weekend!
+              🛑 Pre-orders are currently closed!
             </p>
-            <p className="text-sm opacity-90 mt-1">We are busy baking. Ordering re-opens on Monday!</p>
+            <p className="text-sm opacity-90 mt-1">Pre-orders reopen Monday. Every order supports the women of Baganihan.</p>
           </div>
         )}
 
@@ -483,16 +410,35 @@ const BatterDaysPreOrder = () => {
             animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
             transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
           >
-            Baked treats made with love !
+            Baking a Difference
           </motion.h1>
           <p className="text-xl text-rose-800/80 font-medium font-heading">
-            From batter to better days ⋆𐙚₊˚⊹♡
+            For the Batter ⋆𐙚₊˚⊹♡
           </p>
         </div>
       </motion.header>
 
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 pb-32">
+
+        {/* Mission Statement */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl max-w-3xl mx-auto mb-12 border-2 border-dashed border-rose-200">
+          <div className="text-center space-y-4">
+            <p className="text-gray-700 leading-relaxed">
+              <strong className="text-red-700">'Baking a Difference'</strong> turns something familiar into an opportunity to be part of something intentional. Instead of being just an everyday treat, it becomes a way for you to take part in something bigger!
+            </p>
+            <p className="text-gray-700 leading-relaxed">
+              As part of our <strong className="text-red-700">Kapwa Outreach Project</strong>, this effort supports the Indigenous Peoples' women's community in Baganihan, Davao City.
+            </p>
+            <p className="text-gray-700 leading-relaxed">
+              Grounded in <em>kapwa</em>, it emphasizes the importance of seeing others not as separate, but as people we are connected to.
+            </p>
+            <p className="text-red-700 font-bold text-lg">
+              Every peso earned from this project is dedicated to supporting the women of Baganihan.
+            </p>
+          </div>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex flex-wrap items-center justify-center rounded-2xl bg-white/50 backdrop-blur-sm p-2 text-rose-900 shadow-md mb-8 max-w-4xl mx-auto gap-2 border border-rose-100">
             <TabsTrigger value="menu" className="flex-1 min-w-[100px] rounded-xl px-4 py-3 text-sm font-bold transition-all data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-lg hover:bg-red-50 cursor-pointer">
@@ -510,7 +456,7 @@ const BatterDaysPreOrder = () => {
           </TabsList>
 
           <TabsContent value="menu" className="mt-8 focus:outline-none space-y-16">
-            {['Cookies', 'Brownies', 'Muffins', 'Cupcakes'].map(category => {
+            {['Cookies'].map(category => {
               const categoryProducts = products.filter(p => p.category === category);
               if (categoryProducts.length === 0) return null;
 
@@ -541,84 +487,67 @@ const BatterDaysPreOrder = () => {
               <h2 className="text-3xl font-heading font-bold text-gray-800 mb-8 text-center text-red-600">Frequently Asked Questions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
 
-                {/* Q1 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🍪</div>
+                  <div className="text-2xl pt-1">&#x2764;&#xFE0F;</div>
                   <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What do you sell?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">We offer freshly baked treats such as cookies, brownies, muffins, and cupcakes!</p>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What is 'Baking a Difference'?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">It's a charity bake sale under the <strong>Kapwa Outreach Project</strong>. Every peso earned goes to supporting the Indigenous Peoples' women's community in Baganihan, Davao City.</p>
                   </div>
                 </div>
 
-                {/* Q2 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🛒</div>
+                  <div className="text-2xl pt-1">&#x1F91D;</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Who benefits from this?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">All proceeds support the women of Baganihan. Grounded in <em>kapwa</em>, we see them not as separate, but as people we are connected to.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
+                  <div className="text-2xl pt-1">&#x1F36A;</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What flavors are available?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">We offer three delicious cookie flavors: <strong>Chocolate Chip</strong>, <strong>Oatmeal</strong>, and <strong>Red Velvet</strong>.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
+                  <div className="text-2xl pt-1">&#x1F6D2;</div>
                   <div>
                     <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">How can I place an order?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">You can order right here on our website! Or message us on Facebook/Instagram.</p>
+                    <p className="text-sm text-gray-600 leading-relaxed">Pre-order right here on our website! Select your flavor, choose a box size, and complete the order form.</p>
                   </div>
                 </div>
 
-                {/* Q3 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">📍</div>
+                  <div className="text-2xl pt-1">&#x1F4C5;</div>
                   <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Where are you located?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">We are based in Silang, Cavite. Delivery details will be discussed upon order.</p>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I pre-order?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">Pre-orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
                   </div>
                 </div>
 
-                {/* Q4 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🚫</div>
+                  <div className="text-2xl pt-1">&#x1F4E6;</div>
                   <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Walk-in or Same-day orders?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">No. All orders are strictly <strong>pre-order only</strong>.</p>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When will I receive my order?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">Orders placed Mon&ndash;Thu are baked on the weekend and available for pickup/delivery the following <strong>Monday to Thursday</strong>.</p>
                   </div>
                 </div>
 
-                {/* Q5 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">👩‍🍳</div>
+                  <div className="text-2xl pt-1">&#x1F4B0;</div>
                   <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When do you bake?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">We bake every <strong>Friday to Sunday</strong> only.</p>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Where does my money go?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed"><strong>Every peso</strong> earned from this project is dedicated to supporting the women of Baganihan, Davao City.</p>
                   </div>
                 </div>
 
-                {/* Q6 */}
                 <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🚚</div>
+                  <div className="text-2xl pt-1">&#x261D;&#xFE0F;</div>
                   <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When is delivery?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Deliveries are scheduled <strong>Monday to Wednesday</strong> after baking.</p>
-                  </div>
-                </div>
-
-                {/* Q7 */}
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">❄️</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Why no delivery on baking days?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">To ensure quality, proper cooling, and safe transport of baked goods.</p>
-                  </div>
-                </div>
-
-                {/* Q8 */}
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🏃</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Do you accept rush orders?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Rush orders depend on availability. Feel free to message us and ask!</p>
-                  </div>
-                </div>
-
-                {/* Q9 */}
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">🤝</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Do you do meet-ups?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Meet-ups may be available depending on schedule and location.</p>
+                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Is there a limit on orders?</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">Yes. To ensure fair access, each customer may order <strong>one box per flavor</strong>.</p>
                   </div>
                 </div>
 
@@ -631,11 +560,16 @@ const BatterDaysPreOrder = () => {
               <h2 className="text-3xl font-heading font-bold text-gray-800 mb-8 text-center">Policies & Payment</h2>
               <div className="space-y-8 text-gray-700">
                 <div className="bg-rose-50 p-6 rounded-2xl">
+                  <h3 className="text-xl font-bold text-red-700 mb-4 border-b border-rose-200 pb-2">Our Mission</h3>
+                  <p className="text-sm leading-relaxed mb-3">This initiative is part of the <strong>Kapwa Outreach Project</strong>, supporting the Indigenous Peoples' women's community in Baganihan, Davao City. <strong>Every peso</strong> earned goes directly to the women of Baganihan.</p>
+                </div>
+                <div className="bg-rose-50 p-6 rounded-2xl">
                   <h3 className="text-xl font-bold text-red-700 mb-4 border-b border-rose-200 pb-2">Payment Policy</h3>
                   <ul className="list-disc list-inside space-y-2">
                     <li><strong>50% Downpayment</strong> is required to confirm your slot.</li>
                     <li>Balance must be paid upon pickup/booking of delivery.</li>
                     <li>No DP = No Reservation.</li>
+                    <li>One box per flavor per customer.</li>
                   </ul>
                   <div className="mt-4 pt-4 border-t border-rose-200">
                     <p className="font-bold">GCash / Maya: 09183546374</p>
@@ -900,11 +834,7 @@ const BatterDaysPreOrder = () => {
                             <p className="text-xs text-gray-500">₱{item.price}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => removeFromCart(item.id)} className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-sm font-bold hover:bg-gray-200">-</button>
-                          <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                          <button onClick={() => incrementItem(item.id)} className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-sm font-bold hover:bg-red-200">+</button>
-                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded-lg hover:bg-red-50">Remove</button>
                       </div>
                     ))
                   )}
@@ -920,7 +850,7 @@ const BatterDaysPreOrder = () => {
                     disabled={cart.length === 0 || !isShopOpen()}
                     className="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {isShopOpen() ? 'Proceed to Checkout' : 'Ordering Closed (Fri-Sun)'}
+                    {isShopOpen() ? 'Proceed to Pre-Order' : 'Pre-Orders Closed (Fri–Sun)'}
                   </button>
                 </div>
               </div>
@@ -931,7 +861,8 @@ const BatterDaysPreOrder = () => {
 
       {/* Footer */}
       <footer className="text-center py-8 text-gray-500 text-sm border-t border-dashed border-red-200 bg-white/50">
-        <p className="font-heading font-bold text-red-800 text-lg mb-2">Batter Days by Charlie</p>
+        <p className="font-heading font-bold text-red-800 text-lg mb-1">Baking a Difference</p>
+        <p className="text-xs text-gray-400 mb-4">A Kapwa Outreach Project by Batter Days by Charlie</p>
         <div className="flex justify-center gap-6 mb-4">
           <a href="https://www.instagram.com/batterdays_bycharlie/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-red-600 transition-colors">
             <Instagram size={20} />

@@ -36,7 +36,7 @@ const products: Product[] = [
     id: 'c1',
     name: 'Chocolate Chip Cookies',
     price: 45,
-    image: '/assets/chocolatechip.png',
+    image: '/assets/Chocolatechip.png',
     category: 'Cookies',
     badge: 'Best Seller'
   },
@@ -44,14 +44,14 @@ const products: Product[] = [
     id: 'c2',
     name: 'Oatmeal Cookies',
     price: 45,
-    image: '/assets/oatmeal.png',
+    image: '/assets/Oatmeal.png',
     category: 'Cookies'
   },
   {
     id: 'c3',
     name: 'Red Velvet Cookies',
     price: 45,
-    image: '/assets/revelvet.png',
+    image: '/assets/redvelvet.png',
     category: 'Cookies',
     badge: 'Must Try'
   }
@@ -226,6 +226,7 @@ const ProductCard = React.memo(({
 const BatterDaysPreOrder = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isQrOpen, setIsQrOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('menu');
   const [formData, setFormData] = useState<OrderFormData>({
     name: '',
@@ -605,10 +606,12 @@ const BatterDaysPreOrder = () => {
                         ))}
                       </div>
 
-                      {/* Selected QR Display */}
+                      {/* Selected QR Display — click to enlarge */}
                       <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl border border-gray-100 min-h-[350px]">
-                        <div className="relative w-full max-w-[280px] aspect-square bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mx-auto">
-                          {/* Crop bottom text by anchoring to TOP and setting fixed height/cover */}
+                        <div
+                          className="relative w-full max-w-[280px] aspect-square bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mx-auto cursor-pointer hover:shadow-lg transition-shadow"
+                          onClick={() => setIsQrOpen(true)}
+                        >
                           {selectedPayment === 'GCash' && <img src="/assets/qr_gcash.png" alt="GCash QR" className="w-full h-full object-cover object-top" />}
                           {selectedPayment === 'Maya' && <img src="/assets/qr_maya.png" alt="Maya QR" className="w-full h-full object-cover object-top" />}
                           {selectedPayment === 'MariBank' && <img src="/assets/qr_maribank.png" alt="MariBank QR" className="w-full h-full object-cover object-top" />}
@@ -616,7 +619,47 @@ const BatterDaysPreOrder = () => {
                         <p className="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest text-center">
                           Scan with {selectedPayment}
                         </p>
+                        <p className="text-xs text-gray-400 mt-1 cursor-pointer hover:text-red-500 transition-colors" onClick={() => setIsQrOpen(true)}>
+                          Tap to enlarge
+                        </p>
                       </div>
+
+                      {/* QR Fullscreen Modal */}
+                      <AnimatePresence>
+                        {isQrOpen && (
+                          <>
+                            <motion.div
+                              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              onClick={() => setIsQrOpen(false)}
+                            />
+                            <motion.div
+                              className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none"
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-lg w-full pointer-events-auto text-center">
+                                <div className="flex justify-between items-center mb-4">
+                                  <h3 className="text-lg font-bold text-gray-800">{selectedPayment} QR Code</h3>
+                                  <button onClick={() => setIsQrOpen(false)} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                    <X size={18} />
+                                  </button>
+                                </div>
+                                <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                                  {selectedPayment === 'GCash' && <img src="/assets/qr_gcash.png" alt="GCash QR" className="w-full" />}
+                                  {selectedPayment === 'Maya' && <img src="/assets/qr_maya.png" alt="Maya QR" className="w-full" />}
+                                  {selectedPayment === 'MariBank' && <img src="/assets/qr_maribank.png" alt="MariBank QR" className="w-full" />}
+                                </div>
+                                <p className="mt-4 text-sm text-gray-500">Scan or screenshot this QR code to pay via <strong>{selectedPayment}</strong></p>
+                              </div>
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
 
                       <div className="text-center space-y-1 text-sm text-gray-500 mt-6 border-t border-yellow-100 pt-4">
                         <p>Total Balance Due: <span className="font-bold text-red-600 text-lg">₱{cartTotal}</span></p>

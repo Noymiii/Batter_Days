@@ -220,11 +220,6 @@ const BatterDaysPreOrder = () => {
     });
   };
 
-  // Helper to add specifically from cart modal (increments existing variant)
-  const incrementItem = (uniqueId: string) => {
-    setCart(prev => prev.map(item => item.id === uniqueId ? { ...item, quantity: item.quantity + 1 } : item));
-  };
-
   const clearCart = () => setCart([]);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);

@@ -12,20 +12,16 @@ interface Product {
   image: string;
   category: string;
   badge?: 'Best Seller' | 'New' | 'Must Try';
-  prices: {
-    box6: number;
-    box12: number;
-  };
+  price: number;
 }
 
 interface CartItem {
-  id: string; // Unique ID (productId + size)
+  id: string;
   productId: string;
   name: string;
   price: number;
   image: string;
   quantity: number;
-  size: 'Box of 6' | 'Box of 12';
 }
 
 interface OrderFormData {
@@ -39,11 +35,11 @@ interface OrderFormData {
 
 // Products Data (From Menu Image)
 const products: Product[] = [
-  // BAKING A DIFFERENCE — 3 Charity Flavors
+  // BAKING A DIFFERENCE — 3 Charity Flavors (₱45 each)
   {
     id: 'c1',
     name: 'Chocolate Chip Cookies',
-    prices: { box6: 200, box12: 350 },
+    price: 45,
     image: '/assets/cookie.png',
     category: 'Cookies',
     badge: 'Best Seller'
@@ -51,14 +47,14 @@ const products: Product[] = [
   {
     id: 'c2',
     name: 'Oatmeal Cookies',
-    prices: { box6: 200, box12: 350 },
+    price: 45,
     image: '/assets/cookie.png',
     category: 'Cookies'
   },
   {
     id: 'c3',
     name: 'Red Velvet Cookies',
-    prices: { box6: 260, box12: 480 },
+    price: 45,
     image: '/assets/cookie.png',
     category: 'Cookies',
     badge: 'Must Try'
@@ -80,18 +76,15 @@ const ProductCard = React.memo(({
   isShopOpen = true // Default to true if not passed
 }: {
   product: Product;
-  onAddToCart: (product: Product, size: 'Box of 6' | 'Box of 12', price: number) => void;
+  onAddToCart: (product: Product) => void;
   cartItems: CartItem[];
   isShopOpen?: boolean;
 }) => {
-  const [selectedSize, setSelectedSize] = useState<'Box of 6' | 'Box of 12'>('Box of 6');
-  const currentPrice = selectedSize === 'Box of 6' ? product.prices.box6 : product.prices.box12;
-
-  // Optimized find: only re-calculates when cart or size changes
+  // Optimized find: only re-calculates when cart changes
   const qty = React.useMemo(() => {
-    const item = cartItems.find(i => i.productId === product.id && i.size === selectedSize);
+    const item = cartItems.find(i => i.productId === product.id);
     return item ? item.quantity : 0;
-  }, [cartItems, product.id, selectedSize]);
+  }, [cartItems, product.id]);
 
   return (
     <motion.div
@@ -124,30 +117,14 @@ const ProductCard = React.memo(({
       <div className="p-5 flex flex-col flex-1">
         <h3 className="text-xl font-bold text-gray-800 mb-1 font-heading leading-tight min-h-[3rem]">{product.name}</h3>
 
-        {/* Size Selector */}
-        <div className="flex bg-rose-50 rounded-lg p-1 mb-3">
-          <button
-            onClick={() => setSelectedSize('Box of 6')}
-            className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${selectedSize === 'Box of 6' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Box of 6
-          </button>
-          <button
-            onClick={() => setSelectedSize('Box of 12')}
-            className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${selectedSize === 'Box of 12' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Box of 12
-          </button>
-        </div>
-
         <div className="mt-auto">
           <div className="flex justify-between items-end mb-3">
-            <span className="text-sm text-gray-500 font-medium">{selectedSize}</span>
-            <p className="text-2xl font-bold text-red-600">₱{currentPrice}</p>
+            <span className="text-sm text-gray-500 font-medium">Per piece</span>
+            <p className="text-2xl font-bold text-red-600">₱{product.price}</p>
           </div>
 
           <button
-            onClick={() => isShopOpen && qty === 0 && onAddToCart(product, selectedSize, currentPrice)}
+            onClick={() => isShopOpen && qty === 0 && onAddToCart(product)}
             disabled={!isShopOpen || qty > 0}
             className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && qty === 0
               ? 'bg-red-600 text-white hover:bg-red-700'
@@ -188,22 +165,20 @@ const BatterDaysPreOrder = () => {
   });
   const orderFormRef = useRef<HTMLDivElement>(null);
   // Memoize handlers to prevent prop drilling re-renders
-  // Single order only: max 1 per item variant
-  const addToCart = React.useCallback((product: Product, size: 'Box of 6' | 'Box of 12', price: number) => {
-    const uniqueId = `${product.id}-${size}`;
+  // Single order only: max 1 per flavor
+  const addToCart = React.useCallback((product: Product) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === uniqueId);
+      const existing = prev.find(item => item.id === product.id);
       if (existing) {
         return prev; // Single order — do not increment
       }
       return [...prev, {
-        id: uniqueId,
+        id: product.id,
         productId: product.id,
         name: product.name,
-        price: price,
+        price: product.price,
         image: product.image,
-        quantity: 1,
-        size: size
+        quantity: 1
       }];
     });
   }, []);
@@ -322,7 +297,7 @@ const BatterDaysPreOrder = () => {
         email: formData.email,
         pickupDate: formData.pickupDate,
         pickupTime: formData.pickupTime,
-        order: cart.map(item => `${item.quantity}x ${item.name} (${item.size})`).join(', '), // Matched to backend 'data.order'
+        order: cart.map(item => `${item.quantity}x ${item.name}`).join(', '), // Matched to backend 'data.order'
         cart: cart, // 🔴 NEW: Sending full cart data for LineItems sheet
         total: cartTotal, // Matched to backend 'data.total'
         status: 'Pending',
@@ -482,68 +457,44 @@ const BatterDaysPreOrder = () => {
               <h2 className="text-3xl font-heading font-bold text-gray-800 mb-8 text-center text-red-600">Frequently Asked Questions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x2764;&#xFE0F;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What is 'Baking a Difference'?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">It's a charity bake sale under the <strong>Kapwa Outreach Project</strong>. Every peso earned goes to supporting the Indigenous Peoples' women's community in Baganihan, Davao City.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What is 'Baking a Difference'?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">It's a charity bake sale under the <strong>Kapwa Outreach Project</strong>. Every peso earned goes to supporting the Indigenous Peoples' women's community in Baganihan, Davao City.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F91D;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Who benefits from this?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">All proceeds support the women of Baganihan. Grounded in <em>kapwa</em>, we see them not as separate, but as people we are connected to.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Who benefits from this?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">All proceeds support the women of Baganihan. Grounded in <em>kapwa</em>, we see them not as separate, but as people we are connected to.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F36A;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What flavors are available?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">We offer three delicious cookie flavors: <strong>Chocolate Chip</strong>, <strong>Oatmeal</strong>, and <strong>Red Velvet</strong>.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">What flavors are available?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">We offer three delicious cookie flavors: <strong>Chocolate Chip</strong>, <strong>Oatmeal</strong>, and <strong>Red Velvet</strong>.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F6D2;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">How can I place an order?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Pre-order right here on our website! Select your flavor, choose a box size, and complete the order form.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">How can I place an order?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">Pre-order right here on our website! Select your flavor and complete the order form.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F4C5;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I pre-order?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Pre-orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I pre-order?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">Pre-orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F4E6;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When will I receive my order?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Orders placed Mon&ndash;Thu are baked on the weekend and available for pickup/delivery the following <strong>Monday to Thursday</strong>.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When will I receive my order?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">Orders placed Mon&ndash;Thu are baked on the weekend and available for pickup/delivery the following <strong>Monday to Thursday</strong>.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x1F4B0;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Where does my money go?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed"><strong>Every peso</strong> earned from this project is dedicated to supporting the women of Baganihan, Davao City.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Where does my money go?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed"><strong>Every peso</strong> earned from this project is dedicated to supporting the women of Baganihan, Davao City.</p>
                 </div>
 
-                <div className="flex gap-3 items-start p-3 hover:bg-white rounded-xl transition-colors">
-                  <div className="text-2xl pt-1">&#x261D;&#xFE0F;</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Is there a limit on orders?</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">Yes. To ensure fair access, each customer may order <strong>one box per flavor</strong>.</p>
-                  </div>
+                <div className="p-3 hover:bg-white rounded-xl transition-colors">
+                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Is there a limit on orders?</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">Yes. To ensure fair access, each customer may order <strong>one per flavor</strong>.</p>
                 </div>
 
               </div>
@@ -564,7 +515,7 @@ const BatterDaysPreOrder = () => {
                     <li><strong>50% Downpayment</strong> is required to confirm your slot.</li>
                     <li>Balance must be paid upon pickup/booking of delivery.</li>
                     <li>No DP = No Reservation.</li>
-                    <li>One box per flavor per customer.</li>
+                    <li>One per flavor per customer.</li>
                   </ul>
                   <div className="mt-4 pt-4 border-t border-rose-200">
                     <p className="font-bold">GCash / Maya: 09183546374</p>
@@ -805,7 +756,7 @@ const BatterDaysPreOrder = () => {
             >
               <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto h-[80vh] flex flex-col">
                 <div className="p-6 bg-rose-50 flex justify-between items-center border-b border-rose-100">
-                  <h2 className="text-2xl font-heading font-bold text-rose-900">Your Basket 🧺</h2>
+                  <h2 className="text-2xl font-heading font-bold text-rose-900">Your Basket</h2>
                   <button onClick={() => setIsCartOpen(false)} className="bg-white p-2 rounded-full shadow-sm hover:bg-rose-100 transition-colors text-rose-900">
                     <X size={20} />
                   </button>
@@ -825,7 +776,6 @@ const BatterDaysPreOrder = () => {
                           </div>
                           <div>
                             <h4 className="font-bold text-sm text-gray-800">{item.name}</h4>
-                            <p className="text-xs text-red-500 font-bold">{item.size}</p>
                             <p className="text-xs text-gray-500">₱{item.price}</p>
                           </div>
                         </div>

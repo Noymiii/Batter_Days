@@ -509,11 +509,6 @@ const BatterDaysPreOrder = () => {
                   <p className="text-sm text-gray-600 leading-relaxed"><strong>Every peso</strong> earned from this project is dedicated to supporting the women of Baganihan, Davao City.</p>
                 </div>
 
-                <div className="p-3 hover:bg-white rounded-xl transition-colors">
-                  <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">Is there a limit on orders?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">Yes. To ensure fair access, each customer may order <strong>one per flavor</strong>.</p>
-                </div>
-
               </div>
             </div>
           </TabsContent>
@@ -532,7 +527,7 @@ const BatterDaysPreOrder = () => {
                     <li><strong>50% Downpayment</strong> is required to confirm your slot.</li>
                     <li>Balance must be paid upon pickup/booking of delivery.</li>
                     <li>No DP = No Reservation.</li>
-                    <li>One per flavor per customer.</li>
+
                   </ul>
                   <div className="mt-4 pt-4 border-t border-rose-200">
                     <p className="font-bold">GCash / Maya: 09183546374</p>

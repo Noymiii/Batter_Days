@@ -68,13 +68,11 @@ const Badge = ({ children, className = '' }: { children: React.ReactNode; classN
 const ProductCard = React.memo(({
   product,
   onAddToCart,
-  cartItems,
-  isShopOpen = true // Default to true if not passed
+  cartItems
 }: {
   product: Product;
   onAddToCart: (product: Product, quantity: number) => void;
   cartItems: CartItem[];
-  isShopOpen?: boolean;
 }) => {
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedQty, setSelectedQty] = useState(1);
@@ -105,7 +103,7 @@ const ProductCard = React.memo(({
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className={`w-full h-full object-cover transition-transform duration-500 hover:scale-105 ${!isShopOpen ? 'grayscale opacity-70' : ''}`}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
           {product.badge && (
             <div className="absolute top-3 right-3">
@@ -129,18 +127,14 @@ const ProductCard = React.memo(({
             </div>
 
             <button
-              onClick={() => { if (isShopOpen && !inCart) setShowQtyModal(true); }}
-              disabled={!isShopOpen || inCart}
-              className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${isShopOpen && !inCart
+              onClick={() => { if (!inCart) setShowQtyModal(true); }}
+              disabled={inCart}
+              className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${!inCart
                 ? 'bg-red-600 text-white hover:bg-red-700'
-                : inCart
-                  ? 'bg-green-500 text-white cursor-default hover:bg-green-500'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
+                : 'bg-green-500 text-white cursor-default hover:bg-green-500'
                 }`}
             >
-              {!isShopOpen ? (
-                'Orders Open Mon\u2013Thu'
-              ) : inCart ? (
+              {inCart ? (
                 'Added \u2713'
               ) : (
                 <>
@@ -297,11 +291,8 @@ const BatterDaysPreOrder = () => {
   // 🔴 IMPORTANT: REPLACE THIS WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx42jIGvtYZ5u2_ALUYu8bmvXMSDtyHcZJep4dDv2nJnvwZXOF5RaGdt-QYqlgJgz8Esw/exec"
 
-  // Shop is OPEN only Mon(1) - Thu(4)
-  const isShopOpen = () => {
-    const day = new Date().getDay();
-    return day >= 1 && day <= 4;
-  };
+  // Shop is always open — no day restrictions
+  const isShopOpen = () => true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,15 +372,7 @@ const BatterDaysPreOrder = () => {
           />
         </div>
 
-        {/* 🔴 SHOP CLOSED BANNER */}
-        {!isShopOpen() && (
-          <div className="bg-red-600 text-white py-3 px-4 rounded-xl shadow-lg max-w-2xl mx-auto mb-6 animate-pulse">
-            <p className="font-bold flex items-center justify-center gap-2">
-              🛑 Orders are currently closed!
-            </p>
-            <p className="text-sm opacity-90 mt-1">Orders reopen Monday. Every order supports the women of Baganihan.</p>
-          </div>
-        )}
+
 
         <div className="hero-welcome max-w-2xl mx-auto">
           <motion.h1
@@ -460,7 +443,6 @@ const BatterDaysPreOrder = () => {
                         product={product}
                         onAddToCart={addToCart}
                         cartItems={cart}
-                        isShopOpen={isShopOpen()}
                       />
                     ))}
                   </div>
@@ -496,12 +478,12 @@ const BatterDaysPreOrder = () => {
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
                   <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I order?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">Orders are open <strong>Monday through Thursday</strong>. Ordering closes at end of day Thursday for weekend fulfillment.</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">You can place an order <strong>anytime</strong>! Our shop is always open.</p>
                 </div>
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
                   <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When will I receive my order?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">Orders placed Mon&ndash;Thu are baked on the weekend and available for pickup/delivery the following <strong>Monday to Thursday</strong>.</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">We'll reach out to confirm your order and arrange pickup or delivery at a time that works for you.</p>
                 </div>
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">

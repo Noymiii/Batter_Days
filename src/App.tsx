@@ -68,11 +68,13 @@ const Badge = ({ children, className = '' }: { children: React.ReactNode; classN
 const ProductCard = React.memo(({
   product,
   onAddToCart,
-  cartItems
+  cartItems,
+  shopClosed
 }: {
   product: Product;
   onAddToCart: (product: Product, quantity: number) => void;
   cartItems: CartItem[];
+  shopClosed?: boolean;
 }) => {
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedQty, setSelectedQty] = useState(1);
@@ -127,14 +129,18 @@ const ProductCard = React.memo(({
             </div>
 
             <button
-              onClick={() => { if (!inCart) setShowQtyModal(true); }}
-              disabled={inCart}
-              className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${!inCart
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-green-500 text-white cursor-default hover:bg-green-500'
+              onClick={() => { if (!inCart && !shopClosed) setShowQtyModal(true); }}
+              disabled={inCart || shopClosed}
+              className={`w-full py-2 px-4 rounded-full font-semibold transition-colors duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95 touch-manipulation ${shopClosed
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : !inCart
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-green-500 text-white cursor-default hover:bg-green-500'
                 }`}
             >
-              {inCart ? (
+              {shopClosed ? (
+                'Orders Paused'
+              ) : inCart ? (
                 'Added \u2713'
               ) : (
                 <>
@@ -291,8 +297,8 @@ const BatterDaysPreOrder = () => {
   // 🔴 IMPORTANT: REPLACE THIS WITH YOUR ACTUAL GOOGLE APPS SCRIPT WEB APP URL
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx42jIGvtYZ5u2_ALUYu8bmvXMSDtyHcZJep4dDv2nJnvwZXOF5RaGdt-QYqlgJgz8Esw/exec"
 
-  // Shop is always open — no day restrictions
-  const isShopOpen = () => true;
+  // Shop is currently closed — orders paused until further notice
+  const isShopOpen = () => false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -426,6 +432,21 @@ const BatterDaysPreOrder = () => {
           </TabsList>
 
           <TabsContent value="menu" className="mt-8 focus:outline-none space-y-16">
+            {/* Orders Paused Banner */}
+            {!isShopOpen() && (
+              <motion.div
+                className="bg-amber-50 border-2 border-dashed border-amber-300 rounded-2xl p-6 text-center max-w-3xl mx-auto shadow-md"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="text-4xl mb-3">🍪✨</div>
+                <h3 className="text-xl font-bold text-amber-800 font-heading mb-2">Orders Are Currently Paused</h3>
+                <p className="text-amber-700 text-sm leading-relaxed">
+                  We're taking a short break! Stay tuned — ordering will be back soon. In the meantime, feel free to browse our menu.
+                </p>
+              </motion.div>
+            )}
             {['Cookies'].map(category => {
               const categoryProducts = products.filter(p => p.category === category);
               if (categoryProducts.length === 0) return null;
@@ -443,6 +464,7 @@ const BatterDaysPreOrder = () => {
                         product={product}
                         onAddToCart={addToCart}
                         cartItems={cart}
+                        shopClosed={!isShopOpen()}
                       />
                     ))}
                   </div>
@@ -478,7 +500,7 @@ const BatterDaysPreOrder = () => {
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
                   <h3 className="text-lg font-bold text-red-700 mb-1 leading-tight">When can I order?</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">You can place an order <strong>anytime</strong>! Our shop is always open.</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">Orders are <strong>currently paused</strong>. Stay tuned — we'll announce when ordering is open again!</p>
                 </div>
 
                 <div className="p-3 hover:bg-white rounded-xl transition-colors">
@@ -521,6 +543,22 @@ const BatterDaysPreOrder = () => {
           </TabsContent>
 
           <TabsContent value="order" className="mt-8 focus:outline-none">
+            {!isShopOpen() ? (
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl max-w-3xl mx-auto border-2 border-dashed border-rose-200 relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-200/80 w-32 h-8 rotate-1 shadow-sm"></div>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🚫🍪</div>
+                  <h2 className="text-3xl font-heading font-bold text-gray-800 mb-3">Orders Are Paused</h2>
+                  <p className="text-gray-500 text-lg mb-6 max-w-md mx-auto">We're not accepting orders right now. Follow us on social media to know when we're back!</p>
+                  <button
+                    onClick={() => setActiveTab('menu')}
+                    className="bg-red-600 text-white px-8 py-3 rounded-full font-bold hover:bg-red-700 transition-all shadow-lg"
+                  >
+                    Browse Menu
+                  </button>
+                </div>
+              </div>
+            ) : (
             <div ref={orderFormRef} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl max-w-3xl mx-auto border-2 border-dashed border-rose-200 relative">
               {/* Tape effect */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-200/80 w-32 h-8 rotate-1 shadow-sm"></div>
@@ -717,6 +755,7 @@ const BatterDaysPreOrder = () => {
                 </form>
               )}
             </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -806,7 +845,7 @@ const BatterDaysPreOrder = () => {
                     disabled={cart.length === 0 || !isShopOpen()}
                     className="w-full bg-red-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    {isShopOpen() ? 'Proceed to Order' : 'Orders Closed (Fri–Sun)'}
+                    {isShopOpen() ? 'Proceed to Order' : 'Orders Currently Paused'}
                   </button>
                 </div>
               </div>
